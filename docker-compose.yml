@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  board-generator-frontend: # Renomeado para clareza
+    build:
+      context: . # Onde o Dockerfile está localizado (diretório atual)
+      dockerfile: Dockerfile
+    ports:
+      - "80:80" # Mapeia a porta 80 do host para a porta 80 do contêiner
+    container_name: board-generator-frontend # Nome amigável para o contêiner
+    environment:
+      # Passa a URL da API como uma variável de ambiente em TEMPO DE EXECUÇÃO
+      - VITE_API_URL=http://board-generator-api:3001
+    restart: unless-stopped # Reinicia o contêiner automaticamente, a menos que seja parado manualmente
+    depends_on:
+      - board-generator-api # O frontend depende da API
+
+  board-generator-api: # Novo serviço para a API
+    build:
+      context: ../Board.Generator.Api # Caminho relativo para a pasta da API
+      dockerfile: Dockerfile
+    container_name: board-generator-api # Nome amigável para o contêiner da API
+    restart: unless-stopped
+    env_file:
+      # Carrega as variáveis do arquivo .env da API.
+      # Certifique-se de criar um arquivo '.env' na pasta da API a partir do '.env.example' com os valores corretos.
+      - ../Board.Generator.Api/.env

@@ -1,0 +1,45 @@
+# .azure-pipelines.yml
+
+trigger:
+  - master
+  - main # Adicionado 'main' como um branch de trigger comum
+
+variables:
+  vmImageName: 'ubuntu-latest'
+  serviceConnection: 'meu-docker-hub' # Nome da sua conexão de serviço Docker Hub no Azure DevOps
+  repository: 'usuario/board-generator' # Nome do seu repositório no Docker Hub (ex: sipolatti/sipo-board-generator)
+  dockerfilePath: '**/Dockerfile' # Caminho para o Dockerfile no repositório
+  tag: 'latest' # Usar o ID da build como tag para tags únicas
+  # tag: 'latest' # Ou 'latest' para sempre atualizar a tag mais recente
+
+stages:
+- stage: Build
+  displayName: Build and push stage
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: $(vmImageName)
+    steps:
+    - checkout: self # Garante que o código-fonte seja baixado
+
+    - task: NodeTool@0 # Instala o Node.js no agente de build
+      displayName: 'Install Node.js'
+      inputs:
+        versionSpec: '24.x' # Use a mesma versão do Node.js que no Dockerfile
+
+    - script: | # Instala dependências e constrói a aplicação React
+        npm ci
+        npm run build
+      displayName: 'Install dependencies and build React app'
+
+    - task: Docker@2 # Constrói e envia a imagem Docker para o registro
+      displayName: 'Build and push an image to container registry'
+      inputs:
+        command: buildAndPush
+        containerRegistry: $(serviceConnection)
+        repository: $(repository)
+        dockerfile: $(dockerfilePath)
+        buildContext: $(Build.SourcesDirectory) # O contexto de build é a raiz do repositório
+        tags: |
+          $(tag)

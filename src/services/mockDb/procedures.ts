@@ -11,14 +11,14 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 // Banco de dados em memória (Mock)
 const mockProdutos: Record<number, RetornoConsultaProduto> = {
   1010: {
-    CODSITPROD: 'ATIVO',
+    CODPROD: 1010,
     DESCRICAOPROD: 'LAVADORA AUTOM. CWN13ABANA 13KG 110V BRANCO',
     codbarra: '7891129243567',
     FANTASIA: 'CONSUL',
     QTMAXPARCELA: 12
   },
   2020: {
-    CODSITPROD: 'ATIVO',
+    CODPROD: 2020,
     DESCRICAOPROD: 'REFRIGERADOR BRE57FKBNA 447L 220V INOX',
     codbarra: '7891129288888',
     FANTASIA: 'BRASTEMP',
@@ -55,8 +55,8 @@ const mockSeguros: Record<number, RetornoConsultaSeguro[]> = {
 // ==========================================
 
 export async function SP_SIP_PLACA_CONSULTA_PRODUTO(
-  constante: number, 
-  filial: number, 
+  _constante: number, 
+  _filial: number, 
   codigoProduto: number
 ): Promise<RetornoConsultaProduto> {
   await delay(600); // Simula rede
@@ -66,7 +66,7 @@ export async function SP_SIP_PLACA_CONSULTA_PRODUTO(
 }
 
 export async function SP_SIP_PLACA_CONSULTA_PRECOS(
-  filial: number, 
+  _filial: number, 
   codigoProduto: number
 ): Promise<RetornoConsultaPreco> {
   await delay(400); // Simula rede
@@ -76,10 +76,10 @@ export async function SP_SIP_PLACA_CONSULTA_PRECOS(
 }
 
 export async function SP_SIP_PLACA_CONSULTA_PRODUTO_COMSEGURO(
-  constante: number, 
-  filial: number, 
+  _constante: number, 
+  _filial: number, 
   codigoProduto: number, 
-  preco: string | number
+  _preco: string | number
 ): Promise<RetornoConsultaSeguro[]> {
   await delay(500); // Simula rede
   // Retorna array de seguros disponíveis para o produto, ou array vazio se não tiver

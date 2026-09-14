@@ -1,68 +1,44 @@
 // src/features/pdf/PlacasDocument.tsx
-import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
+import { Document, Page, Text as PdfText, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
+import React, { createContext, useContext } from 'react';
 import type { ItemFilaPlaca } from '../../types';
+import layoutConfigsData from '../../config/layoutConfig.json';
 
 Font.register({
   family: 'Grandstander',
   fonts: [
-    { 
-      src: '/fonts/Grandstander-Regular.ttf', 
-      fontWeight: 400 
-    },
-    { 
-      src: '/fonts/Grandstander-Bold.ttf', 
-      fontWeight: 700 
-    },
-    { 
-      src: '/fonts/Grandstander-Black.ttf', 
-      fontWeight: 900 
-    }
+    { src: '/fonts/Grandstander-Regular.ttf', fontWeight: 400 },
+    { src: '/fonts/Grandstander-Bold.ttf', fontWeight: 700 },
+    { src: '/fonts/Grandstander-Black.ttf', fontWeight: 900 }
   ]
 });
 
 Font.register({
   family: 'Montserrat',
   fonts: [
-    { 
-      src: '/fonts/Montserrat-Regular.ttf', 
-      fontWeight: 400 
-    },
-    { 
-      src: '/fonts/Montserrat-Bold.ttf', 
-      fontWeight: 700 
-    },
-    { 
-      src: '/fonts/Montserrat-Black.ttf', 
-      fontWeight: 900 
-    }
+    { src: '/fonts/Montserrat-Regular.ttf', fontWeight: 400 },
+    { src: '/fonts/Montserrat-Bold.ttf', fontWeight: 700 },
+    { src: '/fonts/Montserrat-Black.ttf', fontWeight: 900 }
   ]
 });
 
 Font.register({
   family: 'PlaypenSans',
   fonts: [
-    { 
-      src: '/fonts/PlaypenSans-Regular.ttf', 
-      fontWeight: 400 
-    },
-    { 
-      src: '/fonts/PlaypenSans-Bold.ttf', 
-      fontWeight: 700 
-    },
-    { 
-      src: '/fonts/PlaypenSans-ExtraBold.ttf', 
-      fontWeight: 800 
-    }
+    { src: '/fonts/PlaypenSans-Regular.ttf', fontWeight: 400 },
+    { src: '/fonts/PlaypenSans-Bold.ttf', fontWeight: 700 },
+    { src: '/fonts/PlaypenSans-ExtraBold.ttf', fontWeight: 800 }
   ]
 });
+
+// Não permitir separação/hifenização arbitrária de palavras
+Font.registerHyphenationCallback((word) => [word]);
 
 const styles = StyleSheet.create({
   page: {
     backgroundColor: '#ffffff',
     fontFamily: 'PlaypenSans'
   },
-
-  // NOVO: Este vai ser o contêiner que organiza as placas
   gridContainer: {
     width: '100%',
     height: '100%',
@@ -74,118 +50,43 @@ const styles = StyleSheet.create({
     padding: 0,
     border: 0,
   },
-
-  backgroundImage: {
+  backgroundContainer: {
     position: 'absolute',
     top: 0,
     left: 0,
     width: '100%',
     height: '100%',
-    opacity: 0.4,
-    objectFit: 'cover'
+    zIndex: -1
   },
-  
-  // ESTILOS: 1x1 (PÁGINA INTEIRA)
-  container1x1: { width: '100%', height: '100%', padding: 20, paddingTop: 170, flexDirection: 'column' },
-  brand1x1: { fontSize: 24, fontWeight: 700, backgroundColor: '#000', color: '#FFF', padding: '4 12', alignSelf: 'flex-start', marginBottom: 10, textTransform: 'uppercase' },
-  title1x1: { fontSize: 42, fontWeight: 700, lineHeight: 1.1, marginTop: 10 },
-  
-  priceArea1x1: { backgroundColor: '#F9FAFB', borderRadius: 12, padding: 10, marginLeft: 20 },
-  vistaSmall1x1: { fontSize: 24, fontWeight: 700, color: '#4B5563', marginTop: 20, textAlign:'right' },
-  parcelaRow1x1: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
-  parcelaLabel1x1: { fontSize: 40, fontWeight: 700, color: '#111', marginRight: 30, textAlign: 'right', lineHeight: 1 },
-  totalPrazo1x1: { fontSize: 18, fontWeight: 700, color: '#666', textAlign:'right', marginTop: 25 },
-
-  // ESTILOS: 2x1 (PAISAGEM - 2 COLUNAS)
-  container2x1: { width: '48%', height: '100%', padding: 10, paddingTop: 60, flexDirection: 'column', marginLeft: 10 },
-  title2x1: { fontSize: 24, fontWeight: 700, lineHeight: 1.2, maxLines: 2, marginTop: 55 },
-  
-  priceArea2x1: { backgroundColor: '#F9FAFB', borderRadius: 8, padding: 10, marginVertical: 10 },
-  vistaSmall2x1: { fontSize: 14, fontWeight: 700, color: '#4B5563', marginBottom: 8, marginTop: 15, textAlign: 'right' },
-  parcelaRow2x1: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
-  parcelaLabel2x1: { fontSize: 26, fontWeight: 700, color: '#111', marginRight: 8, textAlign: 'right', lineHeight: 1 },
-  totalPrazo2x1: { fontSize: 12, fontWeight: 700, color: '#666', marginTop: 20, textAlign: 'right', marginBottom: 8 },
-
-  // ESTILOS 8x1
-  container8x1: { 
-    width: '25%', 
-    height: '50%', // Use 50% exato
-    paddingHorizontal: 12,
-    paddingVertical: 0,
-    marginVertical: 0, 
-    paddingTop: 65, // Empurra abaixo da linha azul
-    flexDirection: 'column'
-  },
-  title8x1: { 
-    fontSize: 14, // Fonte menor para caber em 2 linhas
-    fontWeight: 700, 
-    lineHeight: 1.1, 
-    maxLines: 2,
-    marginBottom: 2 // Respiro para o código do produto
-  },
-  priceArea8x1: { 
-    backgroundColor: '#F9FAFB', 
-    padding: 6, 
-    marginVertical: 4 // Dá respiro em cima e em baixo para não colar
-  },
-  vistaSmall8x1: { 
-    fontSize: 10, 
-    fontWeight: 700, 
-    color: '#4B5563', 
-    marginBottom: 2, 
-    textAlign: 'right' 
-  },
-  parcelaRow8x1: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    justifyContent: 'center' 
-  },
-  parcelaLabel8x1: { 
-    fontSize: 16, 
-    fontWeight: 700, 
-    color: '#111', 
-    marginRight: 4, 
-    textAlign: 'right', 
-    lineHeight: 1 
-  },
-  totalPrazo8x1: { 
-    fontSize: 8, 
-    fontWeight: 700, 
-    color: '#666', 
-    marginTop: 4, 
-    textAlign: 'right',
-  },
-
-  // ESTILOS 1x2 (GIGANTE)
-  container1x2Top: { flex: 1, width: '100%', padding: 30, paddingTop: 60, flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start' },
-  container1x2Bottom: { flex: 1, width: '100%', padding: 30, paddingTop: 20, flexDirection: 'column' },
-  title1x2V: { fontSize: 60, fontWeight: 700, lineHeight: 1.1, maxLines: 3, textAlign: 'left' },
-  
-  priceArea1x2: { backgroundColor: '#F9FAFB', borderRadius: 16, padding: 15 },
-  vistaSmall1x2: { fontSize: 26, fontWeight: 700, color: '#4B5563', textAlign: 'right' },
-  parcelaRow1x2: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingBottom: 50 },
-  parcelaLabel1x2: { fontSize: 55, fontWeight: 700, color: '#111', marginRight: 15, textAlign: 'right', lineHeight: 1 },
-  totalPrazo1x2: { fontSize: 20, fontWeight: 700, color: '#666', marginTop: 24, marginBottom: 2, textAlign: 'right' },
+  backgroundImage: {
+    width: '100%',
+    height: '100%',
+    opacity: 0.4
+  }
 });
+
+const FontContext = createContext<string>('PlaypenSans');
+
+const Text = (props: any) => {
+  const fonte = useContext(FontContext);
+  return <PdfText {...props} style={[props.style, { fontFamily: fonte }]} />;
+};
 
 const MODO_CALIBRACAO = false;
 
-// --- FUNÇÃO AUXILIAR DE FORMATAÇÃO ---
 const formatarMoeda = (valor: number) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
 };
 
 const filtrarDescricao = ( desc: string ) => {
-  const regexCodigos = /\b[A-Za-z]+\d+[A-Za-z0-9]*\b/gi;
-
+  const regexCodigos = '' // /\b(?![A-Za-z0-9]{1,5}\b)[A-Za-z]+\d+[A-Za-z0-9]*\b/gi;
   let descFiltrada = desc.replace(regexCodigos, '');
-
   descFiltrada = descFiltrada.replace(/\s+/g, ' ').trim();
-
+  descFiltrada = descFiltrada.replace('NULO', '').trim();
+  descFiltrada = descFiltrada.replace('+', ' + ').trim();
   return descFiltrada;
 }
 
-// Componente para renderizar os centavos menores no topo
 const PrecoCentavosPequenos = ({ 
   valor, 
   tamanhoInteiro = 60, 
@@ -201,524 +102,305 @@ const PrecoCentavosPequenos = ({
   const [inteiro, centavos] = formatado.split('.');
   const inteiroComPonto = parseInt(inteiro, 10).toLocaleString('pt-BR');
 
-  // Ajuste dinâmico de tamanho baseado na quantidade de dígitos da parte inteira.
-  // Os tamanhos passados (tamanhoInteiro, tamanhoCentavos) são considerados como base para 4 dígitos ou mais.
-  let fatorEscala = 1;
-  const numDigitos = inteiro.length;
-
-  if (numDigitos === 3) {
-    fatorEscala = 1.10;
-  } else if (numDigitos === 2) {
-    fatorEscala = 1.3;
-  } else if (numDigitos <= 1) {
-    fatorEscala = 1.5;
-  }
-
-  const tamanhoInteiroCalculado = tamanhoInteiro * fatorEscala;
-  const tamanhoCentavosCalculado = tamanhoCentavos * fatorEscala;
-
   return (
-    <View style={{ flexDirection: 'row', justifyContent: 'center', padding: 0, paddingBottom: tamanhoInteiroCalculado * 0.08 }}>
-      <Text style={{ fontSize: tamanhoInteiroCalculado, fontWeight: 900, color: cor, lineHeight: 1 }}>
-        {inteiroComPonto}
-      </Text>
-      <Text style={{ fontSize: tamanhoCentavosCalculado, fontWeight: 900, color: cor }}>
+    <View style={{ flexDirection: 'row', justifyContent: 'center', paddingBottom: tamanhoInteiro * 0.08, marginRight: -(tamanhoInteiro * 0.2) }}>
+      <View style={{ flexDirection: 'row' }}>
+        {inteiroComPonto.split('.').map((part, index, arr) => (
+          <React.Fragment key={index}>
+            <Text style={{ fontSize: tamanhoInteiro, fontWeight: 900, color: cor, lineHeight: 1 }}>
+              {part}
+            </Text>
+            {index < arr.length - 1 && (
+              <Text style={{ fontSize: tamanhoInteiro, fontWeight: 900, color: cor, lineHeight: 1 }}>
+                .
+              </Text>
+            )}
+          </React.Fragment>
+        ))}
+      </View>
+      <Text style={{ fontSize: tamanhoCentavos, fontWeight: 900, color: cor }}>
         ,{centavos}
       </Text>
     </View>
   );
 };
 
-// --- SUBCOMPONENTES DE RENDERIZAÇÃO ---
-
-const Render1x1 = ({ item }: { item: ItemFilaPlaca }) => {
-  const isFinanciado = item.numParcelas > 1;
-  const textoParcelas = item.comEntrada && isFinanciado
-    ? `1+${item.numParcelas - 1}`
-    : `${item.numParcelas}`;
-  const fonte = (item as any).fonte || 'PlaypenSans';
+const RenderCartaoBadge = ({ tipoCartao, fontSize }: { tipoCartao?: string, fontSize: number }) => {
+  if (tipoCartao !== 'AFINZ' && tipoCartao !== 'AGORACRED') return null;
+  const isAfinz = tipoCartao === 'AFINZ';
+  const cartaoColor = '#000';
+  const cartaoText = isAfinz ? 'AFINZ' : 'AGORACRED';
 
   return (
-    <View style={[styles.container1x1, { fontFamily: fonte }]}>
-      <Text style={styles.title1x1}>{filtrarDescricao(item.produto.DESCRICAOPROD)} - {item.produto.FANTASIA}</Text>
-      <Text style={{ fontSize: 14, color: '#666', marginTop: 8, fontWeight: 700 }}>
-        Cód: {item.produto.CODPROD}
+    <View style={{ minWidth: 'auto', backgroundColor: cartaoColor, padding: `${fontSize * 0.2} ${fontSize * 0.5}`, borderRadius: fontSize * 0.3 }}>
+      <Text style={{ color: '#FFF', fontSize: fontSize, fontWeight: 900 }}>
+        {cartaoText}
       </Text>
+    </View>
+  );
+};
+
+// Determina o tamanho da "célula" do grid baseado no layout
+const getContainerStyle = (layoutId: string, isBottomRow: boolean) => {
+  const base: any = { position: 'relative', overflow: 'hidden' };
+  if (layoutId === '1x1') return { ...base, width: '100%', height: '100%' };
+  if (layoutId === '2x1') return { ...base, width: '50%', height: '100%' };
+  if (layoutId === '8x1') return { ...base, width: '25%', height: '50%', ...(isBottomRow && { transform: 'rotate(180deg)' }) };
+  if (layoutId === '1x2') return { ...base, width: '100%', height: '100%' };
+  return base;
+}
+
+const RenderPlacaAbsoluta = ({ item, layoutId, index, isTopPage = true, customConfig }: { item: ItemFilaPlaca, layoutId: string, index?: number, isTopPage?: boolean, customConfig?: any }) => {
+  const confs = (customConfig || layoutConfigsData as any)[layoutId];
+  const isBottomRow = layoutId === '8x1' && index !== undefined && index >= 4;
+  const containerStyle = getContainerStyle(layoutId, isBottomRow);
+  const fonte = (item as any).fonte || 'PlaypenSans';
+  
+  const isFinanciado = item.numParcelas > 1;
+  const textoParcelas = item.comEntrada && isFinanciado ? `1+${item.numParcelas - 1}` : `${item.numParcelas}`;
+  
+  // No layout 1x2, a página de baixo sobe todo o conteúdo na exata altura de uma folha A4 Paisagem (595.28px)
+  const yOffset = (layoutId === '1x2' && !isTopPage) ? 595.28 : 0;
+  
+  return (
+    <FontContext.Provider value={fonte}>
+      <View style={[containerStyle]}>
       
-      <View style={styles.priceArea1x1}>
-        {(item as any).precoDe && (
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 1, justifyContent: 'flex-end' }}>
+      {/* 1. Nome do Produto */}
+      {(confs.nomeProduto || confs.nomeProdutoSemDePor) && (() => {
+         const configAtiva = (!(item as any).precoDe && confs.nomeProdutoSemDePor) ? confs.nomeProdutoSemDePor : confs.nomeProduto;
+         if (!configAtiva) return null;
+         const nomeStr = `${filtrarDescricao(item.produto.DESCRICAOPROD)}${item.produto.DESCRICAOPROD?.includes('+') ? '' : ` - ${item.produto.FANTASIA}`}`;
+         let numLen = nomeStr.length
+         let fsNome = configAtiva.fontSize;
+
+         return (
+         <View style={{ position: 'absolute', left: configAtiva.x, top: configAtiva.y - yOffset, width: configAtiva.width, height: configAtiva.height }}>
+            <Text maxLines={2} style={{ fontSize: numLen > 40 ? fsNome * 0.7 : fsNome, fontWeight: 'bold', lineHeight: 1.1, textAlign: 'left', textOverflow: 'ellipsis' }}>
+               {nomeStr}
+            </Text>
+         </View>
+         );
+      })()}
+
+      {/* 2. Código */}
+      {(confs.codigo || confs.codigoSemDePor) && (() => {
+         const configAtiva = (!(item as any).precoDe && confs.codigoSemDePor) ? confs.codigoSemDePor : confs.codigo;
+         if (!configAtiva) return null;
+         return (
+         <View style={{ position: 'absolute', left: configAtiva.x, top: configAtiva.y - yOffset, width: configAtiva.width, height: configAtiva.height }}>
+            <Text style={{ fontSize: configAtiva.fontSize, color: '#666', fontWeight: 'bold' }}>
+               Cód: {item.produto.CODPROD}
+            </Text>
+         </View>
+         );
+      })()}
+
+      {/* 3. Modo De/Por */}
+      {confs.dePor && (item as any).precoDe && (
+         <View style={{ position: 'absolute', left: confs.dePor.x, top: confs.dePor.y - yOffset, width: confs.dePor.width, height: confs.dePor.height, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' }}>
             {(item as any).mostrarDesconto && (
-              <View style={{ backgroundColor: '#EA580C', padding: 1, borderRadius: 6, marginRight: fonte == 'PlaypenSans' ? 170 : 110 }}>
-                <Text style={{ color: '#FFF', fontSize: fonte == 'PlaypenSans' ? 16 : 20, fontWeight: 900 }}>SIPOOFERTA!</Text>
+              <View style={{ backgroundColor: '#000', padding: '2 6', borderRadius: 4, marginRight: 8 }}>
+                <Text style={{ color: '#FFF', fontSize: confs.dePor.fontSize * 0.7, fontWeight: 900 }}>OFERTA!</Text>
               </View>
             )}
-            <Text style={{ fontSize: fonte == 'PlaypenSans' ? 16 : 20, color: '#EA580C', fontWeight: 700, marginRight: 8 }}>
-              De:
-            </Text>
-            <Text style={{ fontSize: fonte == 'PlaypenSans' ? 16 : 20, color: '#EA580C', textDecoration: 'line-through', fontWeight: 700, marginRight: 12 }}>
-              {formatarMoeda((item as any).precoDe)}
+            <Text style={{ fontSize: confs.dePor.fontSize, color: '#000', fontWeight: 'bold', marginRight: 4 }}>De:</Text>
+            <Text style={{ fontSize: confs.dePor.fontSize, color: '#000', textDecoration: 'line-through', fontWeight: 'bold', marginRight: 8 }}>
+               {formatarMoeda((item as any).precoDe)}
             </Text>
             {(item as any).mostrarDesconto && (
-              <View style={{ backgroundColor: '#EA580C', padding: 1, borderRadius: 6 }}>
-                <Text style={{ color: '#FFF', fontSize: fonte == 'PlaypenSans' ? 18 : 28, fontWeight: 900 }}>-{(item as any).percentualDesconto}%</Text>
+              <View style={{ backgroundColor: '#000', padding: '2 6', borderRadius: 4 }}>
+                <Text style={{ color: '#FFF', fontSize: confs.dePor.fontSize * 0.8, fontWeight: 900 }}>-{(item as any).percentualDesconto}%</Text>
               </View>
             )}
-          </View>
-        )}
-        {isFinanciado ? (
-          <>
-            <Text style={styles.vistaSmall1x1}>A vista {formatarMoeda(item.preco.PRECO)}</Text>
-            {(item as any).precoDe && (
-              <Text style={{ fontSize: fonte == 'PlaypenSans' ? 26 : 36, fontWeight: 900, color: '#EA580C', lineHeight: 1 }}>POR: </Text>
+         </View>
+      )}
+
+      {/* 4. Flag Financeira */}
+      {confs.flagFinanceira && (
+         <View style={{ position: 'absolute', left: confs.flagFinanceira.x, top: confs.flagFinanceira.y - yOffset, alignItems: 'flex-end' }}>
+            <RenderCartaoBadge tipoCartao={(item as any).tipoCartao} fontSize={confs.flagFinanceira.fontSize} />
+         </View>
+      )}
+
+      {/* 5. Texto À Vista */}
+      {confs.precoAVista && (
+         <View style={{ position: 'absolute', left: confs.precoAVista.x, top: confs.precoAVista.y - yOffset, width: confs.precoAVista.width, height: confs.precoAVista.height }}>
+            {isFinanciado ? (
+              <Text style={{ fontSize: confs.precoAVista.fontSize, color: '#4B5563', fontWeight: 'bold', textAlign: 'right' }}>
+                 A vista: {formatarMoeda(item.preco.PRECO)}
+              </Text>
+            ) : (
+              <Text style={{ fontSize: confs.precoAVista.fontSize, color: '#4B5563', fontWeight: 'bold', textAlign: 'right' }}>
+                 A vista
+              </Text>
             )}
-            <View style={styles.parcelaRow1x1}>
-              <Text style={styles.parcelaLabel1x1}>{textoParcelas}x{'\n'}DE</Text>
+         </View>
+      )}
+
+      {/* 5.5 Texto POR: */}
+      {confs.textoPor && (item as any).precoDe && (
+         <View style={{ position: 'absolute', left: confs.textoPor.x, top: confs.textoPor.y - yOffset, width: confs.textoPor.width, height: confs.textoPor.height }}>
+            <Text style={{ fontSize: confs.textoPor.fontSize, fontWeight: 900, color: '#000', lineHeight: 1 }}>POR:</Text>
+         </View>
+      )}
+
+      {/* 6. Preço Principal */}
+      {confs.precoParcelado && (() => {
+         const valorExibido = isFinanciado ? item.valorParcela : item.preco.PRECO;
+         const digitos = parseInt(Number(valorExibido).toFixed(2).split('.')[0], 10).toString().length;
+         let fsValue = confs.precoParcelado.fontSize4Digit || confs.precoParcelado.fontSize3Digit || confs.precoParcelado.fontSize2Digit || confs.precoParcelado.fontSize1Digit;
+         
+         if (digitos === 1) fsValue = confs.precoParcelado.fontSize1Digit;
+         else if (digitos === 2) fsValue = confs.precoParcelado.fontSize2Digit || confs.precoParcelado.fontSize1Digit;
+         else if (digitos === 3) fsValue = confs.precoParcelado.fontSize3Digit || confs.precoParcelado.fontSize2Digit;
+
+        //  if (fonte == 'PlaypenSans' && layoutId != '1x1') fsValue *= 0.9;
+
+         return (
+           <View style={{ position: 'absolute', left: confs.precoParcelado.x, top: confs.precoParcelado.y - yOffset, width: confs.precoParcelado.width, height: confs.precoParcelado.height, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+              {isFinanciado && (
+                 <Text style={{ fontSize: confs.precoParcelado.fontSizeLabel, fontWeight: 900, color: '#111', marginRight: 2, textAlign: 'right', lineHeight: 1 }}>
+                    {textoParcelas}x{'\n'}DE
+                 </Text>
+              )}
               <PrecoCentavosPequenos 
-                valor={item.valorParcela} 
-                tamanhoInteiro={175}   
-                tamanhoCentavos={50}  
+                 valor={valorExibido} 
+                 tamanhoInteiro={fsValue} 
+                 tamanhoCentavos={fsValue / 3} 
               />
-            </View>
-            <Text style={[styles.totalPrazo1x1]}>Total a prazo: {formatarMoeda(item.valorTotal)}</Text>
-          </>
-        ) : (
-          <>
-            <Text style={styles.vistaSmall1x1}>A VISTA</Text>
-            {(item as any).precoDe && (
-              <Text style={{ fontSize: 36, fontWeight: 900, color: '#EA580C', marginRight: 15, lineHeight: 1 }}>POR: </Text>
-            )}
-            <PrecoCentavosPequenos 
-                valor={item.preco.PRECO} 
-                tamanhoInteiro={165} 
-                tamanhoCentavos={45} 
-              />
-            <Text style={[styles.totalPrazo1x1]}>Dinheiro ou PIX</Text>
-          </>
-        )}
-      </View>
-      
-      {item.seguroSelecionado && (
-        <View style={{ flex: 1, alignItems: 'flex-end', justifyContent: 'flex-end', paddingBottom: 10, marginTop: -10 }}>
-          <Text style={{ fontSize: 16, fontWeight: 700 }}>PROTEJA SUA COMPRA</Text>
-          <Text style={{ fontSize: 12, fontWeight: 700, marginTop: 5 }}>{(item.seguroSelecionado.DESCRICAOSEG).substring(0, 20)} POR APENAS</Text>
-          
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginVertical:  fonte == 'PlaypenSans' ? 6 : 12 }}>
-            {/* NOVO: TEXTO A VISTA */}
-            {item.numParcelas <= 1 && (
-              <Text style={{ fontSize: 16, fontWeight: 700, marginRight: 10, marginTop:  fonte == 'PlaypenSans' ? 4 : 15}}>
-                A vista
-              </Text>
-            )}
-            {item.numParcelas > 1 && (
-              <Text style={{ fontSize: 25, fontWeight: 700, marginRight: 8, marginTop:  fonte == 'PlaypenSans' ? 2 : 6 }}>
-                {textoParcelas}X DE
-              </Text>
-            )}
-            <PrecoCentavosPequenos 
-              valor={item.numParcelas > 1 ? (item.seguroSelecionado.PRECOSEGURO / item.numParcelas) : item.seguroSelecionado.PRECOSEGURO} 
-              tamanhoInteiro={25} 
-              tamanhoCentavos={12} 
-            />
-          </View>
-          <Text style={{ 
-            fontSize: 10, 
-            fontWeight: 700, 
-            color: '#666', 
-            margin: 0, 
-            padding: 5, 
-            marginBottom: 10,
-            opacity: isFinanciado ? 1 : 0 
-          }}>Total a prazo: {formatarMoeda(item.seguroSelecionado.PRECOSEGURO)}</Text>
-        </View>
-      )}
+           </View>
+         );
+      })()}
 
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5, position: 'absolute', bottom: 20, right: 20, left: 20 }}>
-        <Text style={{ fontSize: 10, color: '#666', fontWeight: 700 }}>
-          {item.tipoPlano === 'COM_JUROS' ? 'CET Mensal: 1,35% | CET Anual: 17,46%' : ''}
-        </Text>
-        <Text style={{ fontSize: 10, color: '#666', fontWeight: 700 }}>Data: {new Date(item.preco.DATA).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</Text>
-      </View>
-    </View>
-  );
-};
-
-const Render2x1 = ({ item }: { item: ItemFilaPlaca }) => {
-  const isFinanciado = item.numParcelas > 1;
-  const textoParcelas = item.comEntrada && isFinanciado
-    ? `1+${item.numParcelas - 1}`
-    : `${item.numParcelas}`;
-  const fonte = (item as any).fonte || 'PlaypenSans';
-
-  return (
-    <View style={[styles.container2x1, { fontFamily: fonte }]}>
-      <Text style={[styles.title2x1, { fontSize: fonte == 'PlaypenSans' ? 20 : 24 }]}>{filtrarDescricao(item.produto.DESCRICAOPROD)} - {item.produto.FANTASIA}</Text>
-      <Text style={{ fontSize: 14, color: '#666', fontWeight: 700 }}>
-        Cód: {item.produto.CODPROD}
-      </Text>
-      <View style={styles.priceArea2x1}>
-        {(item as any).precoDe && (
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4, justifyContent: 'flex-end' }}>
-            {(item as any).mostrarDesconto && (
-              <View style={{ backgroundColor: '#EA580C', padding: 1, borderRadius: 4, marginRight: 10 }}>
-                <Text style={{ color: '#FFF', fontSize: fonte == 'PlaypenSans' ? 14 : 16, fontWeight: 900 }}>SIPOOFERTA!</Text>
-              </View>
-            )}
-            <Text style={{ fontSize:fonte == 'PlaypenSans' ? 16 : 18, color: '#EA580C', fontWeight: 700, marginRight: 6 }}>
-              De:
+      {/* 7. Total a Prazo */}
+      {confs.totalAPrazo && (
+         <View style={{ position: 'absolute', left: confs.totalAPrazo.x, top: confs.totalAPrazo.y - yOffset, width: confs.totalAPrazo.width, height: confs.totalAPrazo.height }}>
+            <Text style={{ fontSize: confs.totalAPrazo.fontSize, color: '#666', fontWeight: 'bold', textAlign: 'right' }}>
+               {isFinanciado ? `Total a prazo: ${formatarMoeda(item.valorTotal)}` : 'Dinheiro ou PIX'}
             </Text>
-            <Text style={{ fontSize:fonte == 'PlaypenSans' ? 16 : 18, color: '#EA580C', textDecoration: 'line-through', fontWeight: 700, marginRight: 16 }}>
-              {formatarMoeda((item as any).precoDe)}
+         </View>
+      )}
+
+      {/* 8. Garantia */}
+      {confs.garantia && item.seguroSelecionado && (() => {
+         const fsPrincipal = confs.precoParcelado ? (confs.precoParcelado.fontSize2Digit || 60) : 60;
+         const garantiaFsValue = layoutId == '8x1' ? fsPrincipal / 3.3 : fsPrincipal / 5;
+
+         return (
+         <View style={{ position: 'absolute', left: confs.garantia.x, top: confs.garantia.y - yOffset, width: confs.garantia.width, height: confs.garantia.height, flexDirection: 'column', alignItems: 'flex-end' }}>
+            <Text style={{ fontSize: confs.garantia.fontSizeTitle, fontWeight: 'bold', marginBottom: 2 }}>PROTEJA SUA COMPRA</Text>
+            <Text style={{ fontSize: confs.garantia.fontSizeDesc, fontWeight: 'bold', marginBottom: 8 }}>{(item.seguroSelecionado.DESCRICAOSEG).substring(0, 20)} POR APENAS</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'flex-end', marginBottom: 4, marginRight: 10 }}>
+               <Text style={{ fontSize: confs.garantia.fontSizeTitle, fontWeight: 'bold', marginBottom: (confs.garantia.fontSizeTitle * 0.9), marginRight: 15 }}>
+                 {isFinanciado ? `${textoParcelas}x de` : 'A vista'}
+               </Text>
+               <PrecoCentavosPequenos 
+                  valor={isFinanciado ? (item.seguroSelecionado.PRECOSEGURO / item.numParcelas) : item.seguroSelecionado.PRECOSEGURO} 
+                  tamanhoInteiro={garantiaFsValue} 
+                  tamanhoCentavos={layoutId == '8x1'? garantiaFsValue / 3.5 :layoutId == '1x1' ? garantiaFsValue / 2.3 : garantiaFsValue / 3} 
+               />
+            </View>
+            <Text style={{ fontSize: confs.garantia.fontSizeDesc, color: '#666', fontWeight: 'bold', opacity: isFinanciado ? 1 : 0, marginTop: layoutId == '8x1' ? 0 : 5 }}>
+               Total a prazo: {formatarMoeda(item.valorTotalSeguro || item.seguroSelecionado.PRECOSEGURO)}
             </Text>
-            {(item as any).mostrarDesconto && (
-              <View style={{ backgroundColor: '#EA580C', padding: 1, borderRadius: 4 }}>
-                <Text style={{ color: '#FFF', fontSize: fonte == 'PlaypenSans' ? 16 : 20, fontWeight: 900 }}>-{(item as any).percentualDesconto}%</Text>
-              </View>
-            )}
-          </View>
-        )}
-        {isFinanciado ? (
-          <>
-            <Text style={styles.vistaSmall2x1}>A vista {formatarMoeda(item.preco.PRECO)}</Text>
-            {(item as any).precoDe && (
-              <Text style={{ fontSize: 22, fontWeight: 900, color: '#EA580C', lineHeight: 1 }}>POR: </Text>
-            )}
-            <View style={styles.parcelaRow2x1}>
-              <Text style={styles.parcelaLabel2x1}>{textoParcelas}x{'\n'} de</Text>
-              <PrecoCentavosPequenos valor={item.valorParcela} 
-                tamanhoInteiro={(item as any).precoDe && fonte == 'PlaypenSans' ? 120 : ((item as any).precoDe && fonte == 'Montserrat' ? 115: 130)} 
-                tamanhoCentavos={ (item as any).precoDe && fonte == 'PlaypenSans' ? 25 : 30} 
-              />
-            </View>
-            {/* NOVO: TOTAL A PRAZO ADICIONADO AQUI */}
-            <Text style={styles.totalPrazo2x1}>Total a prazo: {formatarMoeda(item.valorTotal)}</Text>
-          </>
-        ) : (
-          <>
-            <Text style={styles.vistaSmall2x1}>A VISTA</Text>
-            {(item as any).precoDe && (
-              <Text style={{ fontSize: 22, fontWeight: 900, color: '#EA580C', marginRight: 4, lineHeight: 1,  }}>POR:</Text>
-            )}
-            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'flex-start' }}>
-              <PrecoCentavosPequenos valor={item.preco.PRECO} tamanhoInteiro={120} tamanhoCentavos={30} />
-            </View>
-            <Text style={[styles.totalPrazo2x1]}>Dinheiro ou PIX</Text>
-          </>
-        )}
-      </View>
+         </View>
+         );
+      })()}
 
-      {item.seguroSelecionado && (
-        <View style={{ position: 'absolute', bottom: 40, marginTop: 10, right: 20, alignItems: 'flex-end', padding: 0 }}>
-          <Text style={{ fontSize: 10, fontWeight: 700 }}>PROTEJA SUA COMPRA</Text>
-          <Text style={{ fontSize: 8, fontWeight: 700 }}>{(item.seguroSelecionado.DESCRICAOSEG).substring(0, 20)} POR APENAS</Text>
-          
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginTop: 2 }}>
-            {item.numParcelas > 1 && (
-              <Text style={{ fontSize: fonte == 'PlaypenSans' ? 14 : 20, fontWeight: 700, marginRight: 5, marginTop: 6 }}>
-                {textoParcelas}x de
-              </Text>
-            )}
-            {item.numParcelas <= 1 && (
-              <Text style={{ fontSize: fonte == 'PlaypenSans' ? 14 : 20, fontWeight: 700, marginRight: 4, marginTop: 6 }}>
-                {'A vista '}
-              </Text>
-            )}
-            <PrecoCentavosPequenos 
-              valor={item.numParcelas > 1 ? (item.seguroSelecionado.PRECOSEGURO / item.numParcelas) : item.seguroSelecionado.PRECOSEGURO} 
-              tamanhoInteiro={fonte == 'PlaypenSans' ? 16 : 26} 
-              tamanhoCentavos={fonte == 'PlaypenSans' ? 10 : 12} 
-            />
-          </View>
-          <Text style={{ fontSize: 8, fontWeight: 700, color: '#666', margin: 0, padding: 0, opacity: isFinanciado ? 1 : 0 }}>Total a prazo: {formatarMoeda(item.seguroSelecionado.PRECOSEGURO)}</Text>
-        </View>
-      )}
-
-      {/* RODAPÉ JURÍDICO E DATA */}
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between',position:'absolute', bottom: 20, left: 24, right: 24 }}>
-        <Text style={{ fontSize: 8, color: '#666', fontWeight: 700 }}>
-          {item.tipoPlano === 'COM_JUROS' ? 'CET Mensal: 1,35% | CET Anual: 17,46%' : ''}
-        </Text>
-        <Text style={{ fontSize: 8, color: '#666', fontWeight: 700 }}>Data: {new Date(item.preco.DATA).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</Text>
-      </View>
-    </View>
-  );
-};
-
-const Render8x1 = ({ item, index }: { item: ItemFilaPlaca, index?: number }) => {
-  const isFinanciado = item.numParcelas > 1;
-  const isBottomRow = index !== undefined && index >= 4;
-  const textoParcelas = item.comEntrada && isFinanciado
-    ? `1+${item.numParcelas - 1}`
-    : `${item.numParcelas}`;
-  const fonte = (item as any).fonte || 'PlaypenSans';
-
-  return (
-    <View style={[styles.container8x1, isBottomRow ? { transform: 'rotate(180deg)' } : {}, { fontFamily: fonte }]} wrap={false}>
-      <Text style={styles.title8x1}>{filtrarDescricao(item.produto.DESCRICAOPROD)} - {item.produto.FANTASIA}</Text>
-      
-      <Text style={{ fontSize: 7, color: '#666', fontWeight: 700 }}>
-        Cód: {item.produto.CODPROD}
-      </Text>
-      
-      {/* O preço SEMPRE dentro da caixa cinza */}
-      <View style={styles.priceArea8x1}>
-        {(item as any).precoDe && (
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2, justifyContent: 'flex-end' }}>
-            {(item as any).mostrarDesconto && (
-              <View style={{ backgroundColor: '#EA580C', padding: 1, borderRadius: 2, marginRight: 5 }}>
-                <Text style={{ color: '#FFF', fontSize:  fonte == 'PlaypenSans' ? 8 : 9, fontWeight: 900 }}>SIPOOFERTA!</Text>
-              </View>
-            )}
-            <Text style={{ fontSize:  fonte == 'PlaypenSans' ? 7 : 8, color: '#EA580C', fontWeight: 700, marginRight: 3 }}>
-              De:
+      {/* 9. Rodapé Jurídico */}
+      {confs.rodape && (
+         <View style={{ position: 'absolute', left: confs.rodape.x, top: confs.rodape.y - yOffset, width: confs.rodape.width, height: confs.rodape.height, flexDirection: 'row', justifyContent: 'space-between' }}>
+            <Text style={{ fontSize: confs.rodape.fontSize, color: '#666', fontWeight: 'bold' }}>
+               {(item as any).tipoCartao === 'AFINZ' ? item.numParcelas < 25 ? 'AFINZ - Taxa Mensal: 4,09%' : 'AFINZ - Taxa Mensal: 4,19%' :
+                (item as any).tipoCartao === 'AGORACRED' ? 'AGORACRED - Taxa Mensal: 4,99%' :
+                item.tipoPlano === 'COM_JUROS' ? 'CET Mensal: 1,35% | CET Anual: 17,46%' : ''}
             </Text>
-            <Text style={{ fontSize:  fonte == 'PlaypenSans' ? 7 : 8, color: '#EA580C', textDecoration: 'line-through', fontWeight: 700, marginRight: 4 }}>
-              {formatarMoeda((item as any).precoDe)}
+            <Text style={{ fontSize: confs.rodape.fontSize, color: '#666', fontWeight: 'bold' }}>
+               Data: {new Date(item.preco.DATA).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
             </Text>
-            {(item as any).mostrarDesconto && (
-              <View style={{ backgroundColor: '#EA580C', padding: '1 3', borderRadius: 2 }}>
-                <Text style={{ color: '#FFF', fontSize: fonte == 'PlaypenSans' ? 8 : 9, fontWeight: 900 }}>-{(item as any).percentualDesconto}%</Text>
-              </View>
-            )}
-          </View>
-        )}
-        {isFinanciado ? (
-          <>
-            <Text style={styles.vistaSmall8x1}>A vista {formatarMoeda(item.preco.PRECO)}</Text>
-            {(item as any).precoDe && (
-              <Text style={{ fontSize: 12, fontWeight: 900, color: '#EA580C', lineHeight: 1 }}>POR: </Text>
-            )}
-            <View style={styles.parcelaRow8x1}>
-              <Text style={styles.parcelaLabel8x1}>{textoParcelas}x</Text>
-              {/* IMPORTANTE: Reduza o tamanhoInteiro para 48, senão não cabe na caixa do 8x1 */}
-              <PrecoCentavosPequenos valor={item.valorParcela} tamanhoInteiro={ fonte == 'PlaypenSans' ? 48 : 55} tamanhoCentavos={ fonte == 'PlaypenSans' ? 14 : 14} />
-            </View>
-            <Text style={styles.totalPrazo8x1}>Total a prazo: {formatarMoeda(item.valorTotal)}</Text>
-          </>
-        ) : (
-          <>
-            <Text style={styles.vistaSmall8x1}>A VISTA</Text>
-            {/* O tamanho reduzido garante que o A vista não desaparece */}
-            {(item as any).precoDe && (
-              <Text style={{ fontSize: 12, fontWeight: 900, color: '#EA580C', marginRight: 4, lineHeight: 1 }}>POR: </Text>
-            )}
-            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center' }}>
-              <PrecoCentavosPequenos valor={item.preco.PRECO} tamanhoInteiro={50} tamanhoCentavos={10} />
-            </View>
-            <Text style={styles.totalPrazo8x1}>Dinheiro ou PIX</Text>
-          </>
-        )}
-      </View>
-
-      {/* BLOCO DO SEGURO CORRIGIDO - Sem marginTops absurdos (30) e com alinhamento A direita */}
-      {item.seguroSelecionado && (
-        <View style={{ position: 'absolute', bottom: 20, right: 10, alignItems: 'flex-end' }}>
-          <Text style={{ fontSize: fonte == 'PlaypenSans' ? 4 : 6, fontWeight: 700 }}>PROTEJA SUA COMPRA</Text>
-          <Text style={{ fontSize: fonte == 'PlaypenSans' ? 3 : 5, fontWeight: 700 }}>{(item.seguroSelecionado.DESCRICAOSEG).substring(0, 20)} POR APENAS</Text>
-          
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginTop: 2 }}>
-            {item.numParcelas > 1 && (
-              <Text style={{ fontSize: 9, fontWeight: 700, marginRight: 2, marginTop: 4 }}>
-                {textoParcelas}X DE
-              </Text>
-            )}
-            {item.numParcelas <= 1 && (
-              <Text style={{ fontSize: 6, fontWeight: 700, marginRight: 2, marginTop: 4 }}>
-                A vista
-              </Text>
-            )}
-            <PrecoCentavosPequenos 
-              valor={item.numParcelas > 1 ? (item.seguroSelecionado.PRECOSEGURO / item.numParcelas) : item.seguroSelecionado.PRECOSEGURO} 
-              tamanhoInteiro={14} 
-              tamanhoCentavos={6} 
-            />
-          </View>
-          <Text style={{ fontSize: 4, fontWeight: 700, opacity: isFinanciado ? 1 : 0 }}>Total a prazo: {formatarMoeda(item.seguroSelecionado.PRECOSEGURO)}</Text>
-        </View>
+         </View>
       )}
 
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', position:'absolute', bottom: 8, left: 12, right: 12, marginTop: 5 }}>
-        <Text style={{ fontSize: 4, color: '#666', fontWeight: 700 }}>
-          {item.tipoPlano === 'COM_JUROS' ? 'CET M: 1,35% | A: 17,46%' : ''}
-        </Text>
-        <Text style={{ fontSize: 4, color: '#666', fontWeight: 700 }}>Data: {new Date(item.preco.DATA).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</Text>
       </View>
-    </View>
+    </FontContext.Provider>
   );
 };
 
-const Render1x2Top = ({ item }: { item: ItemFilaPlaca }) => {
-  const fonte = (item as any).fonte || 'PlaypenSans';
-  return (
-    // ADICIONADO: wrap={false}
-    <View style={[styles.container1x2Top, { fontFamily: fonte }]} wrap={false}>
-      <Text style={styles.title1x2V}>{filtrarDescricao(item.produto.DESCRICAOPROD)} - {item.produto.FANTASIA}</Text>
-      <Text style={{ fontSize: 24, color: '#666', marginTop: 8, fontWeight: 700 }}>
-        Cód: {item.produto.CODPROD}
-      </Text>
-      {(item as any).precoDe && (
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10, justifyContent: 'flex-end' }}>
-          {(item as any).mostrarDesconto && (
-            <View style={{ backgroundColor: '#EA580C', padding: '6 12', borderRadius: 8, marginRight: 15 }}>
-              <Text style={{ color: '#FFF', fontSize: 36, fontWeight: 900 }}>SIPOOFERTA!</Text>
-            </View>
-          )}
-          <Text style={{ fontSize: 40, color: '#EA580C', fontWeight: 700, marginRight: 10 }}>
-            De:
-          </Text>
-          <Text style={{ fontSize: 40, color: '#EA580C', textDecoration: 'line-through', fontWeight: 700, marginRight: 15 }}>
-            {formatarMoeda((item as any).precoDe)}
-          </Text>
-          {(item as any).mostrarDesconto && (
-            <View style={{ backgroundColor: '#EA580C', padding: '6 12', borderRadius: 8 }}>
-              <Text style={{ color: '#FFF', fontSize: 44, fontWeight: 900 }}>-{(item as any).percentualDesconto}%</Text>
-            </View>
-          )}
-        </View>
-      )}
-      {(item as any).precoDe && (
-        <Text style={{ fontSize: 48, fontWeight: 900, color: '#EA580C', lineHeight: 1,  }}>POR: </Text>
-      )}
-    </View>
-  );
-};
-
-const Render1x2Bottom = ({ item }: { item: ItemFilaPlaca }) => {
-  const isFinanciado = item.numParcelas > 1;
-  const textoParcelas = item.comEntrada && isFinanciado
-    ? `1+${item.numParcelas - 1}`
-    : `${item.numParcelas}`;
-  const fonte = (item as any).fonte || 'PlaypenSans';
-
-  return (
-    <View style={[styles.container1x2Bottom, { fontFamily: fonte }]} wrap={false}>
-      <View style={styles.priceArea1x2}>
-        
-        {isFinanciado ? (
-          <>
-            {/* <Text style={styles.vistaSmall1x2}>ou A vista {formatarMoeda(item.preco.PRECO)}</Text> */}
-            
-            <View style={styles.parcelaRow1x2}>
-              <Text style={styles.parcelaLabel1x2}>{textoParcelas}x{'\n'}DE</Text>
-              {/* O valor 180 é o limite absoluto para caber numa A4 sem vazar */}
-              <PrecoCentavosPequenos valor={item.valorParcela} tamanhoInteiro={235} tamanhoCentavos={60} />
-            </View>
-            <Text style={styles.totalPrazo1x2}>Total a prazo: {formatarMoeda(item.valorTotal)}</Text>
-          </>
-        ) : (
-          <>
-            {/* <Text style={styles.vistaSmall1x2}>A VISTA</Text> */}
-            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center' }}>
-              <PrecoCentavosPequenos valor={item.preco.PRECO} tamanhoInteiro={235} tamanhoCentavos={60} />
-            </View>
-            <Text style={styles.totalPrazo1x2}>Dinheiro ou PIX</Text>
-          </>
-        )}
-      </View>
-
-      {item.seguroSelecionado && (
-        <View style={{ alignItems: 'flex-end', marginTop: 1, bottom: 1 }}>
-          <Text style={{ fontSize: 18, fontWeight: 700 }}>PROTEJA SUA COMPRA</Text>
-          <Text style={{ fontSize: 18, fontWeight: 700 }}>{(item.seguroSelecionado.DESCRICAOSEG).substring(0, 20)} POR APENAS</Text>
-          
-          <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginTop: 5 }}>
-            {item.numParcelas <= 1 && (
-              <Text style={{ fontSize: 22, fontWeight: 700, marginRight: 10, marginTop: 10 }}>
-                A vista
-              </Text>
-            )}
-            {item.numParcelas > 1 && (
-              <Text style={{ fontSize: 18, fontWeight: 700, marginRight: 10, marginTop: 10 }}>
-                {textoParcelas}x de
-              </Text>
-            )}
-            <PrecoCentavosPequenos 
-              valor={item.numParcelas > 1 ? (item.seguroSelecionado.PRECOSEGURO / item.numParcelas) : item.seguroSelecionado.PRECOSEGURO} 
-              tamanhoInteiro={32} 
-              tamanhoCentavos={15} 
-            />
-          </View>
-          <Text style={{ fontSize: 14, fontWeight: 700, opacity: isFinanciado ? 1 : 0 }}>Total a prazo: {formatarMoeda(item.seguroSelecionado.PRECOSEGURO)}</Text>
-        </View>
-      )}
-
-      {/* RODAPÉ */}
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 'auto', marginBottom: 10 }}>
-        <Text style={{ fontSize: 14, color: '#666', fontWeight: 700 }}>
-          {item.tipoPlano === 'COM_JUROS' ? 'CET Mensal: 1,35% | CET Anual: 17,46%' : ''}
-        </Text>
-        <Text style={{ fontSize: 14, color: '#666', fontWeight: 700 }}>Data: {new Date(item.preco.DATA).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</Text>
-      </View>
-    </View>
-  );
-};
 
 // --- DOCUMENTO PRINCIPAL ---
 
-export function PlacasDocument({ layoutId, fila }: { layoutId: string; fila: ItemFilaPlaca[] }) {
-  const isLandscape = layoutId === '8x1' || layoutId === '2x1';
+export function PlacasDocument({ layoutId, fila, customConfig }: { layoutId?: string; fila: ItemFilaPlaca[]; customConfig?: any }) {
+  // Agrupa os itens por layoutId
+  const grupos = fila.reduce((acc, item) => {
+    const lId = item.layoutId || layoutId || '1x1';
+    if (!acc[lId]) acc[lId] = [];
+    acc[lId].push(item);
+    return acc;
+  }, {} as Record<string, ItemFilaPlaca[]>);
 
-  // Lógica para o layout GIGANTE (1x2)
-  if (layoutId === '1x2') {
-    return (
-      <Document>
-        {fila.flatMap((item) => [
-          <Page key={`${item.id}-top`} size="A4" orientation="landscape" style={styles.page}>
-            {/* GABARITO PARTE DE CIMA (Se você tiver a imagem) */}
-            
-            <Render1x2Top item={item} />
-          </Page>,
-          <Page key={`${item.id}-bottom`} size="A4" orientation="landscape" style={styles.page}>
-            {/* GABARITO PARTE DE BAIXO */}
-            
-            <Render1x2Bottom item={item} />
-          </Page>
-        ])}
-      </Document>
-    );
-  }
+  const renderPagesForLayout = (lId: string, itens: ItemFilaPlaca[]) => {
+    if (!itens || itens.length === 0) return null;
+    const isLandscape = lId === '8x1' || lId === '2x1' || lId === '1x2';
 
-  // Lógica para os outros layouts (1x1, 2x1, 8x1)
-  let itensPorPagina = 1;
-  if (layoutId === '8x1') itensPorPagina = 8;
-  if (layoutId === '2x1') itensPorPagina = 2;
-
-  const chunkArray = (array: ItemFilaPlaca[], size: number) => {
-    const chunked = [];
-    for (let i = 0; i < array.length; i += size) {
-      chunked.push(array.slice(i, i + size));
+    if (lId === '1x2') {
+      return itens.flatMap((item) => [
+        <Page key={`${item.id}-top`} size="A4" orientation="landscape" style={styles.page}>
+          {MODO_CALIBRACAO && (
+            <View style={styles.backgroundContainer} fixed>
+              <Image src={`/templates/cartaz-1x2.png`} style={styles.backgroundImage} />
+            </View>
+          )}
+          <View style={styles.gridContainer}>
+             <RenderPlacaAbsoluta item={item} layoutId={lId} isTopPage={true} customConfig={customConfig} />
+          </View>
+        </Page>,
+        <Page key={`${item.id}-bottom`} size="A4" orientation="landscape" style={styles.page}>
+          {MODO_CALIBRACAO && (
+            <View style={styles.backgroundContainer} fixed>
+              <Image src={`/templates/cartaz-1x2.png`} style={styles.backgroundImage} />
+            </View>
+          )}
+          <View style={styles.gridContainer}>
+             <RenderPlacaAbsoluta item={item} layoutId={lId} isTopPage={false} customConfig={customConfig} />
+          </View>
+        </Page>
+      ]);
     }
-    return chunked;
-  };
 
-  const paginas = chunkArray(fila, itensPorPagina);
+    let itensPorPagina = 1;
+    if (lId === '8x1') itensPorPagina = 8;
+    if (lId === '2x1') itensPorPagina = 2;
+
+    const chunkArray = (array: ItemFilaPlaca[], size: number) => {
+      const chunked = [];
+      for (let i = 0; i < array.length; i += size) {
+        chunked.push(array.slice(i, i + size));
+      }
+      return chunked;
+    };
+
+    const paginas = chunkArray(itens, itensPorPagina);
+
+    return paginas.map((itensDaPagina, paginaIndex) => (
+      <Page key={`page-${lId}-${paginaIndex}`} size="A4" orientation={isLandscape ? "landscape" : "portrait"} style={styles.page}>
+        {MODO_CALIBRACAO && (
+          <View style={styles.backgroundContainer} fixed>
+            <Image src={`/templates/cartaz-${lId}.png`} style={styles.backgroundImage} />
+          </View>
+        )}
+        <View style={styles.gridContainer}>
+          {itensDaPagina.map((item, index) => {
+            return <RenderPlacaAbsoluta key={item.id} item={item} layoutId={lId} index={index} customConfig={customConfig} />;
+          })}
+        </View>
+      </Page>
+    ));
+  };
 
   return (
     <Document style={{ margin: 0, padding: 0, border: 0 }}>
-      {paginas.map((itensDaPagina, paginaIndex) => (
-        <Page key={`page-${paginaIndex}`} size="A4" orientation={isLandscape ? "landscape" : "portrait"} style={styles.page}>
-          
-          {/* CAMADA 1: O GRID DE PLACAS */}
-          {/* Envolvemos o map nesta View para isolar o layout Flexbox */}
-          <View style={styles.gridContainer}>
-            {itensDaPagina.map((item, index) => {
-              if (layoutId === '8x1') return <Render8x1 key={item.id} item={item} index={index} />;
-              if (layoutId === '2x1') return <Render2x1 key={item.id} item={item} />;
-              return <Render1x1 key={item.id} item={item} />;
-            })}
-          </View>
-
-          {/* CAMADA 2: O GABARITO ABSOLUTO POR CIMA DE TUDO */}
-          {/* Como ele está fora do gridContainer, o top: 0 vai cravar no topo da folha A4 perfeita! */}
-          {MODO_CALIBRACAO && (
-            <Image 
-              src={`/templates/cartaz-${layoutId}.png`} 
-              style={styles.backgroundImage} 
-            />
-          )}
-
-        </Page>
-      ))}
+      {Object.entries(grupos).map(([lId, itens]) => renderPagesForLayout(lId, itens))}
     </Document>
   );
 }

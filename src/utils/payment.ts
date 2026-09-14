@@ -4,8 +4,7 @@ const TAXA_MENSAL = 0.0135;
 export const calcularParcela = (
   precoVista: number,
   parcelas: number,
-  comJuros: boolean,
-  comEntrada: boolean
+  comJuros: boolean
 ) => {
   if (parcelas <= 1 && !comJuros) return { valorParcela: precoVista, total: precoVista };
 

@@ -1,8 +1,8 @@
-# Gerador de Placas de Preço
+# Gerador de Placas - Gerador de Placas de Preço
 
 ## 🎯 Objetivo do Projeto
 
-O Gerador de Placas é um sistema interno desenvolvido para otimizar e padronizar a criação de placas de preço para produtos. O projeto soluciona a necessidade de gerar placas de forma ágil e consistente, eliminando processos manuais e garantindo a conformidade com a identidade visual da empresa, especialmente em cenários de promoção (De/Por).
+O **Gerador de Placas** é um sistema desenvolvido para otimizar e padronizar a criação de placas de preço para produtos da empresa. O projeto soluciona a necessidade de gerar placas de forma ágil e consistente, eliminando processos manuais e garantindo a conformidade com a identidade visual da empresa, especialmente em cenários de promoção (De/Por).
 
 ## ✨ Funcionalidades Principais
 
@@ -36,7 +36,7 @@ Para executar o projeto em seu ambiente de desenvolvimento, siga os passos abaix
 
 ### Pré-requisitos
 
--   [Node.js](https://nodejs.org/) (versão 24.15.0)
+-   [Node.js](https://nodejs.org/) (versão 18 ou superior)
 -   [npm](https://www.npmjs.com/) (geralmente instalado com o Node.js)
 -   O **backend** do projeto deve estar em execução para que as consultas à API funcionem.
 
@@ -44,7 +44,7 @@ Para executar o projeto em seu ambiente de desenvolvimento, siga os passos abaix
 
 1.  **Clone o repositório:**
     ```bash
-    git clone link-repo
+    git clone https://github.com/usuario/gerador-placas.git
     cd gerador-placas
     ```
 

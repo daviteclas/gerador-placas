@@ -56,10 +56,30 @@ export interface ItemFilaPlaca {
   preco: RetornoConsultaPreco;
   seguroSelecionado?: RetornoConsultaSeguro | null;
   formaPagamentoSelecionada: string;
+  layoutId?: string;
   // Novos campos para a matemática financeira
   valorParcela: number;
   valorTotal: number;
   numParcelas: number;
   tipoPlano: 'SEM_JUROS' | 'COM_JUROS';
   comEntrada: boolean;
+  valorParcelaSeguro?: number;
+  valorTotalSeguro?: number;
+  precoDe?: number;
+  percentualDesconto?: number;
+  mostrarDesconto?: boolean;
+  fonte?: string;
+  tipoCartao?: string;
+}
+
+// ==========================================
+// ETIQUETAS E MOCK REPOSITORY
+// ==========================================
+export interface LabelProduct {
+  CODIGO: string;
+  DESC: string;
+  PRECO: number;
+  FISICO: number;
+  MOSTRUARIO: number;
+  SITUACAO: string;
 }
